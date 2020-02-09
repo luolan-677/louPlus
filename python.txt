@@ -29,4 +29,204 @@ a.pop(0)---->1 # pop(0)是指定弹出队列中的第一个元素，pop()可指�
 a = [2,3,4,5,1]
 
 (3)列表推导式
+不用列表推倒式创建列表：
+squares = []
+for x in range(10):
+    squares.append(x**2)
+squares = [0,1,4,9,16,25,36,49,64,81]
+上述方法会导致x这个变量一直存在
+squares = list(map(lambda x: x**2, range(10)))
+等价于列表推导式：squares = [x**2 for x in range(10)]
+如：用列表推导式结合两个列表的元素，元素之间不相等：
+[(x,y) for x in [1,2,3] for y in [3,1,4] if x != y]
+[(1, 3), (1, 4), (2, 3), (2, 1), (2, 4), (3, 1), (3, 4)]
+等同于：
+combs = []
+for x in [1,2,3]:
+    for y in [3,1,4]:
+        if x != y:
+            combs.append((x,y))
+combs
+[(1, 3), (1, 4), (2, 3), (2, 1), (2, 4), (3, 1), (3, 4)]
+推导式也可以进行嵌套：
+a = [1,2,3]
+z = [x + 1 for x in [x ** 2 for x in a]]
+z = [2,5,10]
 
+(4)元组
+元组由逗号分割的值组成
+a = 'Fedora', 'ShiYanLou', 'Kubuntu', 'Pardus'
+a = ('Fedora', 'ShiYanLou', 'Kubuntu', 'Pardus')
+a[1]
+'ShiYanLou'
+for x in a:
+print(x,end=' ') # 将行末的换行符去掉，变成空格进行拼接
+Fedora ShiYanLou Kubuntu Pardus
+可以对任意一个元组进行拆封操作并赋值给多个变量：
+divmod(15,2)
+(7, 1)
+x,y = divmod(15,2)
+x = 7
+y = 1
+注：元组是不可变类型，这意味着你不能在元组内删除或者添加或编辑任何值：
+a = (1,2,3,4)
+del a[0]
+Traceback (most recent call last):
+File "<stdin>", line 1, in <module>
+TypeError: 'tuple' object doesn't support item deletion
+要创建只含一个元素的元组，在值后面跟一个逗号即可：
+a = (123)
+a
+123
+type(a)
+<class 'int'>
+a = (123,)
+a
+(123,)
+type(a)
+<class 'tuple'>
+b = 321,
+b
+(321,)
+type(b)
+<class 'tuple'>
+通过内建函数type()可以知道任意变量的数据类型，len()函数查询任意序列数据类型的长度
+type(len)
+<class 'builtin_function_or_method'>
+
+(5)集合
+集合是一个无序不重复元素的集。基本功能包括关系测试和消除重复元素。
+大括号{}或者set{}函数可以用来创建集合，但是需要注意：空集合必须使用set{}，不能使用{}，后者用于创建空字典。
+basket = {'apple','orange','apple','pear','orange','banana'}
+basket
+{'apple', 'orange', 'pear', 'banana'}
+orange in basket
+'orange' in basket
+True
+'crabgrass' in basket
+False
+a =set('abracadabra')
+b = set('alacazam')
+a = {'b', 'r', 'c', 'a', 'd'}
+b = {'l', 'c', 'a', 'z', 'm'}
+a - b = {'b', 'r', 'd'}
+a | b = {'l', 'z', 'r', 'c', 'a', 'b', 'd', 'm'}
+a & b = {'c', 'a'}
+a ^ b = {'l', 'z', 'r', 'b', 'd', 'm'} 
+从集合中添加或弹出元素：
+a = {'a','e','h','g'}
+a.pop()
+'h'
+a.add('c')
+a = {'c', 'e', 'g', 'a'}
+
+(6)字典
+字典是无序的键值对(key:value)集合，同一个字典内的键必须是互不相同的。
+一对{}创建一个空字典，初始化字典时，在大括号内放置一组逗号分隔的键：对值，这也是字典输出的方式。
+data = {'kushal':'Fedora','kart_':'Debian','Jace':'Mac'}
+data
+{'kart_': 'Debian', 'Jace': 'Mac', 'kushal': 'Fedora'}
+data['kart_']
+'Debian'
+创建新的键值对很简单：
+data['parthan'] = 'Ubuntu'
+data
+{'kart_': 'Debian', 'Jace': 'Mac', 'parthan': 'Ubuntu', 'kushal': 'Fedora'}
+使用del关键字删除任意指定的键值对：
+del data['kushal']
+data
+{'kart_': 'Debian', 'Jace': 'Mac', 'parthan': 'Ubuntu'}
+使用in关键字查询指定的键是否存在于字典中：
+'shiyanlou' in data
+False
+字典中的键必须是不可变类型，比如不能使用列表作为键：
+dict()可以从包含键值对的元组中创建字典：
+dict((('Indian','Delhi'),('Bangladesh','Dhaka')))
+{'Bangladesh': 'Dhaka', 'Indian': 'Delhi'}
+如果想要遍历一个字典，使用字典的items()方法：
+data
+{'kart_': 'Debian', 'Jace': 'Mac', 'parthan': 'Ubuntu'}
+for x,y in data.items():
+    print('{} uses {}'.format(x,y))
+kart_ uses Debian
+Jace uses Mac
+parthan uses Ubuntu
+许多时候我们需要往字典中的元素添加数据，首先要判断这个元素是否存在，不存在则创建一个默认值，如果在循环里执行这个操作，每次迭代都需要判断一次，降低程序性能。
+所以可以使用dict.setdefault(key,default)更有效率的完成这个事情。
+data = {}
+data.setdefault('name',[]).append('Ruby')
+data = {'name': ['Ruby']}
+data.setdefault('name', ).append('C')
+data = {'name': ['Ruby', 'C']}
+data.setdefault('sexc',[]).append('C')
+data = {'sexc': ['C'], 'name': ['Ruby', 'C', 'C']}
+试图索引一个不存在的键将会抛出一个keyError错误，我们可以使用dict.get(key,default)来索引键，如果键不存在，那么返回指定的default值。
+data['foo']
+Traceback (most recent call last):
+File "<stdin>", line 1, in <module>
+KeyError: 'foo'
+data.get('foo',0)
+0
+如果想遍历列表(或者任何序列类型)的同时获得元素索引值，你可以使用enumerate()：
+for i,j in enumerate(['a','b','c']):
+    print(i,j) 
+0 a
+1 b
+2 c
+如果需要同时遍历两个序列类型，可以使用zip()函数：
+for i,j in enumerate(['a','b','c']):
+    print(i,j) 
+0 a
+1 b
+2 c
+
+(7)判断学生成绩是否达标的程序：
+要求：输入学生数量，以及各个学生物理，数学，历史三科的成绩，如果总成绩小于120，程序打印'failed'，否则打印'passed'。
+#! /usr/bin/env python3
+n = int(input('Enter the number of students: '))
+data = {}
+subjects = ('physics','maths','history')
+for i in range(0,n):
+    name = input('Enter the name of the student {}: '.format(i + 1))
+    marks = []
+    for x in subjects:
+        marks.append(int(input('Enter marks of {}:'.format(x))))
+        data[name] = marks                                                                
+for x,y in data.items():
+    total = sum(y)
+    print("{} is total marks {}".format(x,total))
+    if total < 120:
+        print(x,'failed :(')
+    else:
+        print(x,'passed :)')
+name和marks是变量，name用来存储学生的名称，marks是个列表，用来存储输入的学生的成绩数据。
+data是个字典，字典的键值对中，键指的是name的值，值指的是marks的值，因此会使用data[name] = marks将学生数据存入到data字典。
+最后通过for循环遍历字典，x为学生的name，y为学生成绩列表marks，sum()函数会将传入的列表进行加和。
+
+(8)计算两个矩阵的Hadamard乘积：
+要求：输入矩阵的行/列数（在这里假设使用的是n * n的矩阵）
+#! /usr/bin/env python3
+n = int(input('Enter the value of n: '))
+print('Enter values for the Matrix A')
+a = []
+for i in range(n):
+    a.append([int(x) for x in input().split()])
+print('Enter values for the Matrix B')
+b = []
+for i in range(n):
+    b.append([int(x) for x in input().split()])
+c = []
+for i in range(n):
+    c.append([a[i][j] * b[i][j] for j in range(n)])
+print('After matrix multiplication')                            
+print('-' * 7 * n)
+for x in c:
+    for y in x:
+        print(str(y).rjust(5),end=' ')
+    print()
+print('-' * 7 * n)
+这里使用了几次列表推导式：
+[int(x) for x in input().split()]
+首先通过input()获得用户输入的字符串，再使用split()分割字符串得到一些列的数字字符串，然后用int()从每个数字字符串创建对应的整数值。
+[a[i][j] * b[i][j] for j in range(n)]
+得到矩阵乘积的每一行数据。
