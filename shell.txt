@@ -1,0 +1,397 @@
+shell编程基础
+程序
+    程序：算法+数据结构
+    数据：程序的核心
+    数据结构：数据在计算机中的类型和组织方式
+    算法：处理数据的方式
+程序编程风格
+    过程式：以指令为中心，数据服务于指令
+    对象式：以数据为中心，指令服务于数据
+shell程序
+    提供了编程能力，解释执行
+程序的执行方式
+    计算机：运行二进制命令
+    编程语言：人与计算机之间交互的语言
+    低级编程语言：
+        机器：0和1
+        汇编：用一些助记符号替代机器指令，称为汇编语言
+    高级编程语言：
+        编译：高级语言-->编译器-->机器代码-->执行
+            C，C++
+        解释：高级语言-->执行-->解释器-->机器代码
+            shell，python，php，JavaScript，perl
+编程基本概念
+    编程逻辑处理方式：
+        顺序执行
+        循环执行
+        选择执行
+    shell编程：过程式，解释执行
+    编程语言的基本结构：
+        各种系统命令的组合
+        数据存储：变量、数组
+        表达式：a+b
+        语句：if
+shell脚本基础
+    shell脚本：
+        包含一些命令或声明，并符合一定格式的文本文件
+    格式要求：首行shebang机制
+        #! /bin/bash
+        #! /usr/bin/python
+        #! /usr/bin/perl
+    shell脚本的用途有：
+        自动化常用命令
+        执行系统管理和故障排除
+        创建简单的应用程序
+        处理文本或文件
+    shell脚本执行：
+        (1)解释器的名称+需要执行的文件：bash hello.sh
+        (3)使用管道符：cat hello.sh | bash
+        (2)给定执行权限，+x，若不是在path的路径下，需要指定路径进行执行，如./hello.sh
+           如何将新建的文件路径加入到环境中：修改/etc/profile.d/env.sh中的内容，加上PATH=/data/xxxx/:$PATH，意思是在原有的基础上进行补充。
+    例一：给定账户初始登录密码，第一次登录时必须修改密码
+        #!/bin/bash   
+        useradd test  
+        echo "User test is created"
+        echo magedu | passwd --stdin test &>/dev/null
+        echo "passwd: magedu" &>/dev/null
+        passwd -e test &>/dev/null
+    为了防止shell脚本自身的错误给系统带来损坏，有如下两种校验方式
+        (1)bash -n user,sh
+        (2)bash -x user.sh，类似于debug
+    例二：显示当前系统信息
+        #!/usr/bin/zsh            
+        COLOURSTART="\033[1;31m"  
+        COLOUREND="\033[0m"       
+        print "System : $COLOURSTART`uname -r`$COLOUREND"                                                    
+        print "CPU : $COLOURSTART`lscpu | grep "Model name" | cut -d: -f2 | tr -s ' ' | cut -d' ' -f2-13`$COLOUREND"
+        print "Disk Size : $COLOURSTART`lsblk 2> /dev/null | grep disk | grep vdb | tr -s " " | cut -d" " -f4`$COLOUREND"
+        print "Memory : $COLOURSTART`free -h | grep Mem | cut -d: -f2 | tr -s " " | cut -d" " -f2`$COLOUREND"
+        unset COLOURSTART COLOUREND
+变量
+    变量：命令的内存空间
+    变量：变量类型
+        作用：1.数据存储方式
+              2.参与的运算
+              3.表示的数据范围
+        类型：字符
+              数值：整型，浮点型
+    静态编译语言：使用变量前，先声明变量类型，之后类型不能改变，在编译时检查，如：java，C
+    动态编译语言：不用先事先声明，可随时改变类型，如bash，python
+    强类型语言：不同类型数据操作，必须经过强制转换才同一类型才能运算，如：java，C#，python
+        如：以下python代码
+            print( 'mageud' + 10) 提示出错，不会自动转换类型
+            print( 'mageud' + str(10)) 结果为magedu10，需要显示转换类型
+    弱类型语言：语言的运行时会隐式做数据类型转换，无须指定类型，默认均为字符型；
+                参与运算会自动进行隐式类型转换；
+                变量无须事先定义可直接调用。
+        如：bash不支持浮点数，php，JavaScript
+    shell中变量命名法则：
+        1.不能使程序中的保留字：例如if，for(内部外部命令)
+        2.只能使用数字，字母及下划线，且不能以数字开头
+        3.见名知义(不要用单独字母命名)
+        4.统一命名规则：驼峰命名法(studentname---->StudentName)
+    shell中命名建议规则：
+        1.变量名大写
+        2.局部变量小写
+        3.函数名小写
+        4.用英文名字，并体现出实际作用
+    bash中变量的种类：
+        根据变量的生效范围等标准划分下面变量类型
+            局部变量：生效范围为当前shell进程
+                      对当前shell之外的其他shell进程，当前shell退出再进入或者当前shell的子shell进程均无效
+            环境变量：生效范围为当前shell进程及其子进程
+            本地变量：生效范围为当前shell进程中某代码片段，通常指函数
+            位置变量：$1，$2，... 来表示，用于让脚本在脚本代码中调用通过命令行传递给它的参数
+            特殊变量：$?，$0，$*，$@，$#，$$
+                      $1，$2，... 对应文件后的第一个，第二个 ... 参数，shift[n]换位置
+                      $0 命令本身
+                      $* 传递给脚本的所有参数，全部参数合为一个字符串
+                      $@ 传递给脚本的所有参数，每个参数为独立字符串
+                      $# 传递给脚本的参数的个数
+                      # 注：$@ $* 只在被双引号包起来的时候才会有差异
+                      set -- 清空所有位置变量
+                      例：使用 father.sh 和 son.sh 两个文件进行比较。
+                      vim father.sh
+                      #!/usr/bin
+                      echo "all arg are $*"
+                      ./son.sh "$*"
+
+                      vim son.sh
+                      #!/usr/bin
+                      echo "1st arg is $1"
+
+                      执行结果：
+                      shiyanlou:~/ $ ./father.sh a b c                                                                                                   [22:15:58]
+                      all args are a b c
+                      1st arg is a b c
+                      原因：
+                      在father.sh的脚本中，./son.sh "$*"中的$*加上了双引号，就导致所有的参数都变成了一个整体
+
+                      进行修改：
+                      vim father.sh
+                      #!/usr/bin
+                      echo "all arg are $*"
+                      ./son.sh $* # 或者写成"$@"
+
+                      执行结果：
+                      shiyanlou:~/ $ ./father.sh a b c                                                                                                   [22:20:08]
+                      all args are a b c
+                      1st arg is a
+
+                      例题：写一个脚本用来代替rm命令。
+                      #!/usr/bin/zsh
+                      echo "you will delete the $1"
+                      sudo mkdir /tmp/`date +"%F_%T"`/
+                      sudo mv $1 /tmp/`date +"%F_%T"`/
+                      echo "succeed!"
+                      进阶：
+                      #!/usr/bin/zsh
+                      currentTime=`date '+%F_%s'`
+                      destinationDir="/tmp"
+                      sudo mkdir -p $destinationDir/$currentTime/
+                      sudo mv $* $destinationDir/$currentTime/
+                      
+    局部变量：("\033[1;31m$NAME\033[0m"改变颜色)
+        变量赋值：name = 'value'
+        可以使用引用value
+            (1)可以是直接字串：name = "root"
+            (2)变量引用：name = "$USER"
+            (3)命令引用：name = 'COMMAND'
+                         name = $(COMMAND)
+        变量引用：${name} 或者 $name
+            " " 弱引用，其中的变量引用会被替换为变量值
+            ' ' 强引用，其中的变量引用不会被替换为变量值，而保持原字符串
+        显示已定义的所有变量：set
+        删除变量：unset name(不需要加$)
+    环境变量：
+              export name=VALUE
+              declare -x name=VALUE(declare -x就是表示环境变量的意思)
+              echo $BASHPID：可以查看当前bash的进程号
+              echo $PPID：可以查看当前bash的父进程号
+        查看目前已经存在的环境变量：env，printenv，export，declare -x
+        修改环境变量：
+            只能从上往下传，并不能从下往上传。
+            如：在父shell中定义环境变量为mage，后在子shell中定义环境变量为wang，切换回父shell之后变量依旧为mage。
+                环境变量只需要声明一次即可，不管在哪个节点shell中进行变量的更改，都无须再进行声明。
+        bash內建的环境变量：
+            PATH
+            SHELL
+            USER
+            UID
+            HOME
+            PWD
+            SHLVL(bash的嵌套深度)
+            LANG
+            MAIL
+            HOSTNAME
+            HISSIZE
+            _ 下划线(上一条命令的最后一个参数)
+                shiyanlou:~/ $ id shiyanlou                                                                                                        [21:09:40]
+                uid=5000(shiyanlou) gid=5000(shiyanlou) 组=5000(shiyanlou)
+                shiyanlou:~/ $ echo $_                                                                                                             [21:10:50]
+                shiyanlou
+    只读变量
+         在指定后，不能进行修改的变量，也可以理解成常亮
+         声明只读变量：
+             readonly name
+             declare -r name
+         查看只读变量：
+             readonly -p
+         如：
+             pi = 3.14
+             readonly pi
+             pi = 3.1416(bash:pi:readonly variable)
+             unset pi(bash:unset:pi:cannot unset:readonly variable)
+             exit(只有使用exit才能退出当前制度变量)
+    小括号()
+        如果希望接下来的变量只影响后面一个命令，之一直接使用小括号进行绑定
+        小括号与当前环境的关系就相当于父子进程，小括号是子进程
+        如：(umask 066;touch 1.txt)
+        shiyanlou:~/ $ TITLE=ceo;echo $TITLE;(echo $TITLE;TITLE=coo;echo $TITLE);echo $TITLE
+                     ceo
+                     ceo
+                     coo
+                     ceo
+    花括号{}
+        与小括号相反，使用花括号并不会产生子进程，所以在花括号中修改的变量会继续进行影响后续的命令
+        shiyanlou:~/ $ TITLE=ceo;echo $TITLE;{echo $TITLE;TITLE=coo;echo $TITLE};echo $TITLE                                               [21:28:42]
+                     ceo
+                     ceo
+                     coo
+                     coo
+    
+    code1：
+        echo "1st arg is $1"                                                                                                                      
+        echo "2st arg is $2"
+        echo "3st arg is $3"
+        echo "10st arg is $10"
+        echo "11st arg is $11"
+        echo "All args are $*"
+        echo "All args are $@"
+        echo "Arg number is $#"
+        echo "The scriptname is `basename $0`"
+    Q1：     
+        shiyanlou:~/ $ ./arg.sh aa bb cc                                                                                                   [21:38:21]
+        1st arg is aa
+        2st arg is bb
+        3st arg is cc
+        All args are aa bb cc
+        All args are aa bb cc
+        Arg number is 3
+        The scriptname is arg.sh
+    code2：
+        echo "1st arg is $1"                                                                                                                      
+        echo "2st arg is $2"
+        echo "3st arg is $3"
+        echo "10st arg is $10"
+        echo "11st arg is $11"
+        echo "All args are $*"
+        echo "All args are $@"
+        echo "Arg number is $#"
+        echo "The scriptname is `basename $0`"
+    Q2：
+        shiyanlou:~/ $ ./arg.sh {a..z}                                                                                                     [21:41:28]
+        1st arg is a
+        2st arg is b
+        3st arg is c
+        10st arg is j
+        11st arg is k
+        All args are a b c d e f g h i j k l m n o p q r s t u v w x y z
+        All args are a b c d e f g h i j k l m n o p q r s t u v w x y z
+        Arg number is 26
+        The scriptname is arg.sh
+    
+    例题：写一个发送文件的脚本。
+    解答：
+        #! /usr/bin/zsh
+        echo "上传开始"
+        scp $* wang@172.16.128.163:/data/scripts37/
+        echo "上传结束"
+        # $*可以将后面所有的参数都进行发送
+
+退出状态
+    进程使用退出状态来报告成功或者失败
+    0 代表成功，1-255 代表失败
+    $? 变量保存最近的命令退出状态
+    退出状态码：
+        bash自定义退出状态码：
+        exit[n]：自定义退出状态码
+        注意：脚本中一旦遇到exit命令，脚本会立即终止；终止退出状态取决于exit命令后面的数字
+              如果未给脚本指定退出状态码，整个脚本的退出状态取决于脚本中执行的最后一条命令的状态码
+        退出状态的值可以进行人为指定
+        如：
+            #! /usr/bin/zsh
+            hostname
+            ls
+            exit 100
+            ---------------
+            echo $?
+            100
+        人为返回的好处：可以指定数值代表对应发生的结果，常见的如网站返回的404,500等
+
+算数运算
+    bash中的算术运算：help let
+        +，-，*，/，%取模(取余)，**平方，乘法符号有些场景中需要进行转义
+        实现算术运算：
+        (1)let var=算数表达式 x=10; y=20; let z=x+y; echo $z; z=30
+        (2)var=$[算术表达式] z=$[100+20]; echo $z; z=120
+        (3)var=$((算数表达式)) 同上
+        (4)var=$(expr arg1 arg2 arg3 ...) expr 3 + 5; 8 注：一定要注意格式，必须有空格
+                                          expr 3 \* 5; 15 注：*需要进行转义
+        (5)declare -i var=数值 declare -i n; n=2+3; n=5 注：-i 为把n设定为整数，所以后续的表达式不能被识别成字符串，只能进行数字运算
+                                                            在shell中不支持小数，只能使用整数，结果若有小数则进行取整
+        (6)echo '算数表达式' | bc echo '3+4' | bc; 7
+    bash有內建的随机数生成器变量：$RANDOM(0-32767)
+        示例：生成 0-49 之间的随机数
+            echo $[$RANDOM%50] 注：50用来圈定取数的范围，左闭右开，可进行叠加运算，如$RANDOM%50+1，范围变成1-50
+    赋值：
+        增强型赋值：
+            +=，-=，*=，/=，%=
+        let varOPEvalue
+            例如：let count+=3
+            自加3后自赋值
+        自增，自减：
+            let var+=1
+            let var++
+            let var-=1
+            let var--
+
+逻辑运算
+    true,false
+        1,0
+    与：和1与结果为原值，和0与结果为0
+        1 与 1 = 1
+        1 与 0 = 0
+        0 与 1 = 0
+        0 与 0 = 0
+    或：和1或结果为1，全为0结果为0
+        1 或 1 = 1
+        1 或 0 = 1
+        0 或 1 = 1
+        0 或 0 = 0
+    非：!
+        !1 = 0     !true
+        !0 = 1     !false
+    短路运算：&&
+        短路与：
+            第一个为0，结果必定为0：如果第一个命令结果为失败，则不再运行第二个命令
+            第一个为1，第二个必须要参与运算
+            cmd1 && cmd2：如果cmd1结果为失败，不执行cmd2，若果cmd1成功，执行cmd2
+        短路或：||
+            第一个为1，结果必定为1
+            第一个为0，第二个必须要参与运算
+            cmd1 || cmd2：如果cmd1成功，不执行cmd2，如果cmd1失败，执行cmd2
+            加强运算：
+                cmd1 && cmd2 || cmd3
+                true && echo true || echo false---->true
+                false && echo true || echo true---->false
+    异或：^
+        异或的两个值，相同为假，不同为真
+        12^8：要先把两个数转换成2进制，然后进行同位异或，1100^1000=0100，A^B=C，C^B=A，A^C=B
+        参数对换：x=10; y=20; x=$[x^u]; y=$[x^y]; x=$[x^y]; echo x=$x; echo y=$y
+
+条件测试
+    判断某需求是否满足，需要由测试机制来实现
+    专用的测试表达式需要由测试命令辅助完成测试过程
+    评估布尔声明，以便用在条件性执行中
+        若真，则返回0
+        若假，则返回1
+    测试命令：
+        test EXPRESSION
+        [ EXPRESSION ] 推荐使用[]，比test更加有条理，中括号中只要存在值，就为真：[ 0 ];echo $?
+		       同样的，该命令还可以判断某个文件四否存在，是否有权限等等，如：FILE=/data/test.txt; [ -a "$FILE" ] || touch $FILE # -a后面的变量一定要加上引号，否则即便变量消息命令依旧运行
+        [[ EXPRESSION ]] # 可以在其中输入扩展正则表达式，需要使用=~(包含)符号，判断左侧字符串是否能被右侧的PATTERN所匹配
+			   str=gooooood; [[ $str =~ o{2,} ]] && echo true
+			   n=123; [[ "$n" =~ ^[[:digit:]]+$ ]] && echo digit 注：记得加上双括号
+			   FILE=f.sh; [[ $FILE =~ \.sh$ ]] && echo sh
+        注意：EXPRESSION前后必须有空白字符
+        例：
+            x=hello; y=ok; test $x = $y; echo $?; 1
+            比较的表达式等号的两边需要空格，如果连在一起就变成了赋值
+            test $x = &y && echo equal || echo not equal
+            test $x != $y && echo true || echo false
+        算数比较需要用到对应的字符：
+            -eq：等于 -ne：不等于 -lt：小于 -le：小于等于 -gt：大于 -ge：大于等于
+        例题：
+            m=10; n=20; test $m -lt $n; echo $?; 0
+        
+	例题：检测磁盘空间，若空间使用量大于80则发出报警。
+        used=`df | grep "/dev/sd" | tr -s ' ' % | cut -d% -f5 | sort -nr | head -1`
+        test $used -ge $1 && echo "disk used > $1%" || echo 'disk normal'
+
+	例题：判断IP地址是否合法。
+	IP=3.3.3.3; [[ $IP =~ ^(([1-9]?[0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9|25[0-5])$ ]] && echo ip is yes || echo ip is no
+
+	例题：判断某个文件是否以sh字符结尾，并且拥有执行权限。
+	FILE=/data/test.sh; [[ $FILE =~ \.sh$ ]] && [ -x "$FILE" ] && echo $FILE
+
+	例题：判断某个文件是否可读可写。
+	[ -r "$FILE" -a -w "$FILE" ] && echo $FILE is readable and writeable
+	# 以root权限运行该脚本，需要注意角色的权限控制，root拥有的权限很大，脚本根据实际情况进行判断，文件的权限即便是0，root也能正常进行读写，执行权限除外，若没有x权限，root也无法运行
+	[ -x "$FILE" ] && echo $FILE is excutable
+	
+	例题：使用脚本进行用户批量创建，若执行脚本时没有同时给予用户名则提示参数缺失，若帐号已存在则提示帐号已存在。
+	#! /bin/bash
+	[ $# -eq 0 ] && echo "you must input a username like *.sh username" && exit
+	id $1 &> /dev/null && echo "User $1 is exist" && exit
+	useradd $1 &> /dev/null && echo $1 is created; echo magedu | passwd --stdin $1 &> /dev/null || echo "ERROR!" && exit
