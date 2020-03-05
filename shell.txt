@@ -463,7 +463,7 @@ shell脚本基础
 	    所有剩余单词都被分配给最后一个变量
 	    read -p "Enter a filename:" FILE
 
-条件选择if语句
+条件选择if语句 if cmd1; then cmd2; else cmd3; fi
 	if是shell的关键字，不可以当成命令单独使用。
 	选择执行：
 	注意：if语句可嵌套
@@ -489,4 +489,167 @@ shell脚本基础
 	[[ "$ANSWER" =~ ^(y|yes)$ ]] && { echo ok; exit; }
 	[[ "$ANSWER" =~ ^(n|no)$ ]] && { echo Not ok; exit; }
 
-	
+	例题：判断年龄的脚本。
+	#!/bin/bash
+	read -p "Input your age: " AGE
+	if [[ ! "$AGE" =~ ^[0-9]+$ ]]; then
+		echo "Please input a digit age"
+	elif [ $AGE -lt 18 ]; then
+		echo "good good study"
+	elif [ $AGE -le 60 ]; then
+		echo "good good work"
+	elif [ $AGE -le 100 ]; then
+		echo "enjoyyour life"
+	else
+		echo "welcome to earth"
+	fi
+
+条件判断：case语句 case也是一个关键字
+	case变量引用in
+	PAT1)
+		分支1
+		;;
+	PAT2)
+		分支2
+		;;
+	...
+	*) 注：如果上述条件都不满足，则运行该条件
+		默认分支
+		;;
+	esac
+	注：case支持glob风格的通配符：
+		*：任意长度任意字符
+		?：任意单个字符
+		[]：指定范围内的任意单个字符
+		a|b：a或b
+	例题：
+		case $NUM in
+		1|3|5)
+			cmd1
+			;;
+		2|4|6)
+			cmd2
+			;;
+		...
+		*)
+			cmdN
+			;;
+		esac
+	例题：使用case方法完成yes or no
+	#!/bin/bash
+	read -p "do you agree: " ANSWER
+	value=`echo $ANSWER | tr 'A-Z' 'a-z'`
+	case $value in
+	y|yes)
+		echo YES
+		;;
+	n|no)
+		echo no
+		;;
+	*)
+		echo "please input yes or no"
+		;;
+	esac
+
+	#!/bin/bash
+	read -p "do you agree: " ANSWER
+	case $ANSWER in
+	[Nn]|[Nn][Oo])
+		echo NO
+		;;
+	[Yy]|[Yy][Ee][Ss])
+		echo YES
+		;;
+	*)
+		echo error
+		;;
+	esac
+
+bash如何展开命令行(优先级)
+	把命令行分成单个命令词
+	展开别名
+	展开大括号的声明({})
+	展开波浪符声明(~)
+	命令替换$() 和 ")
+	再次把命令行分成命令词
+	展开文件通配(* ? [abc]等等)
+	准备I/O重导向(< >)
+	运行命令
+防止扩展
+	反斜线(\)会使随后的字符按原意解释
+		echo Your cost: \$5.00
+		Your cost: $5.00
+	加引号来防止扩展
+		单引号('')防止所有扩展
+		双引号("")也可以防止扩展，但是以下情况例外：
+			$(美元符号) 变量扩展
+			``(反引号)  命令替换
+			\(反斜线)   禁止单个字符扩展
+			!(叹号)     历史命令替换 history中的历史命令，使用 !编号 可以进行调用
+bash的配置文件
+	按生效范围划分，存在两类：
+		全局配置：
+			/etc/profile
+			/etc/profile.d/*.sh
+			/etc/bashrc
+		个人配置：
+			~/.bash_profile
+			~/.bashrc
+shell登陆两种方式
+	交互式登陆：
+		直接通过终端输入帐号密码登陆
+		使用 "su -UserName" 切换的用户
+			执行顺序：/etc/profile --> /etc/profile.d/*sh --> ~/.bash_profile --> ~/.bashrc --> /etc/bashrc
+	非交互式登陆：
+		su UserName
+		图形界面下打开的终端
+		执行脚本
+		任何其他的bash实例
+			执行顺序：/etc/profile.d/*.sh --> /etc/bashrc --> ~/.bashrc
+Profile类
+	按功能划分，存在两类：
+		profile类和bashrc类
+	profile类：为交互式登陆的shell提供配置
+		全局：/etc/profile, /etc/profile.d/*.sh
+		个人：~/.bash_profile
+		功能：
+		用于定义环境变量
+		运行命令或脚本
+Bashrc类
+	为非交互式和交互式登陆的shell提供配置
+		全局：/etc/bashrc
+		个人：~/.bashrc
+		功能：
+		定义命令别名和函数
+		定义本地变量
+编辑配置文件生效
+	修改profile和bashrc文件后需生效
+		两种方法：
+		重新启动shell进程
+		或source
+		例：
+		.~/.bashrc
+运行sh文件的四种方式
+	./*.sh
+	bash *.sh # bash是在当前shell的子shell中进行运行脚本，脚本运行结束则关闭子shell，不会对父shell产生影响
+	cat *.sh | bash # 使用管道符进行传送的时候可能会出现错误
+	source *.sh # source是在当前shell的进程下进行执行，如果脚本中存在变量的指定，会直接影响当前环境
+Bash退出任务
+	保存在~/.bash_logout文件中(用户)
+	在退出登陆shell时运行
+	用于：
+		创建自动备份
+		清除临时文件
+set命令 set +* 用于关闭功能 set -* 用于打开功能
+	$-变量
+		h：hashall，打开这个选项后，shell会将命令所在的路径hash下来，避免每次都要查询，通过set +h 将h选项关闭
+		i：interactive-comments，包含这个选项说明当前的shell是一个交互式的shell，所谓的交互式shell，在脚本中，i选项是关闭的
+		m：monitor，打开监控模式，就可以通过job control来控制进程的停止，继续，后台或者前台执行等
+		B：braceexpand，大括号扩展
+		H：history，H选项打开，可以展开历史列表中的命令，可以通过!感叹号来完成，例如"!!"返回上最近的一个历史命令，"!n"返回第n个历史命令
+脚本安全(写在脚本的开头)
+	set命令
+		-u 在扩展一个没有设置的变量时，显示错误信息
+			等同set -o nounset
+		-e 如果一个命令返回一个非0退出状态值(失败)就退出
+			等通set -o errexit
