@@ -360,6 +360,31 @@ shell脚本基础
         test EXPRESSION
         [ EXPRESSION ] 推荐使用[]，比test更加有条理，中括号中只要存在值，就为真：[ 0 ];echo $?
 		       同样的，该命令还可以判断某个文件四否存在，是否有权限等等，如：FILE=/data/test.txt; [ -a "$FILE" ] || touch $FILE # -a后面的变量一定要加上引号，否则即便变量消息命令依旧运行
+		       File operators:    
+		       -a FILE        True if file exists.
+		       -b FILE        True if file is block special.
+		       -c FILE        True if file is character special.
+		       -d FILE        True if file is a directory.
+		       -e FILE        True if file exists.
+		       -f FILE        True if file exists and is a regular file.
+		       -g FILE        True if file is set-group-id.
+		       -h FILE        True if file is a symbolic link.
+		       -L FILE        True if file is a symbolic link.
+		       -k FILE        True if file has its `sticky' bit set.
+		       -p FILE        True if file is a named pipe.
+		       -r FILE        True if file is readable by you.
+		       -s FILE        True if file exists and is not empty.
+		       -S FILE        True if file is a socket.
+		       -t FD          True if FD is opened on a terminal.
+		       -u FILE        True if the file is set-user-id.
+		       -w FILE        True if the file is writable by you.
+		       -x FILE        True if the file is executable by you.
+		       -O FILE        True if the file is effectively owned by you.
+		       -G FILE        True if the file is effectively owned by your group.
+		       -N FILE        True if the file has been modified since it was last read.
+		       FILE1 -nt FILE2  True if file1 is newer than file2 (according to modification date).
+		       FILE1 -ot FILE2  True if file1 is older than file2.
+		       FILE1 -ef FILE2  True if file1 is a hard link to file2.
         [[ EXPRESSION ]] # 可以在其中输入扩展正则表达式，需要使用=~(包含)符号，判断左侧字符串是否能被右侧的PATTERN所匹配
 			   str=gooooood; [[ $str =~ o{2,} ]] && echo true
 			   n=123; [[ "$n" =~ ^[[:digit:]]+$ ]] && echo digit 注：记得加上双括号
@@ -395,3 +420,73 @@ shell脚本基础
 	[ $# -eq 0 ] && echo "you must input a username like *.sh username" && exit
 	id $1 &> /dev/null && echo "User $1 is exist" && exit
 	useradd $1 &> /dev/null && echo $1 is created; echo magedu | passwd --stdin $1 &> /dev/null || echo "ERROR!" && exit
+
+	例题：ping一个地址，如果通则打印通，不通则打印不通。
+	(1)ping -c1 -w1 xxx.xxx.xxx.xxx &> /dev/null && echo the host is up || echo the host is down
+	(2)ping -ci -w1 xxx.xxx.xxx.xxx &> /dev/null || echo the host is down && echo the host is up
+	上述两个表达式有什么区别？
+	(1)ping通则为真，运行短路与，echo打印字符串为真，所以前面两条命令都为真，不再执行短路或。
+	   ping不通则为假，不再运行短路与，直接运行短路或。
+	(2)ping通则为真，不运行算路或，直接运行短路与。
+	   ping不通则为假，直接运行短路或，echo打印字符串为真，短路或真假为真，所以继续运行短路与，所以在打印down之后继续打印了up。
+	综上所述，在使用短路判断语句时，先与后或比较好，且适用于简单逻辑。
+
+使用read进行输入
+	#!/bin/bash
+	echo -e "please enter your name: \c"
+	read NAME
+	echo "your name is $NAME"
+
+	#!/bin/bash
+	read -p "please enter your name:" NAME
+	echo "Your name is $NAME"
+
+	例题：计算鸡兔同笼问题。
+	#!/bin/bash
+	read -p "please enter the number of the head:" HEAD
+	read -p "please enter the number of the feet:" FEET
+	rabbit=$[FEET/2-HEAD]
+	chook=$[HEAD-rabbit]
+	echo "rabbit: $rabbit  chook: $chook"
+
+	问：echo 1 2 3 | read x y z 是否可以？
+	管道符运行在子shell中，一旦命令运行结束子shell就关闭了，所以在去验证变量的值已经无法生效了。
+	所以如果想看到变量，echo 1 2 3 | { read x y z; echo $x $y $z; }
+
+	使用read来把输入值分配给一个或者多个shell变量
+	    -p 指定要显示的提示
+	    -s 静默输入，一般用于密码
+	    -n N 指定输入的字符长度N
+	    -d '字符' 输入结束符
+	    -t N TIMEOUT为N秒(指定输入时间，超过时间自动停止)
+	    read 从标准输入中读取值，给每个单词分配一个变量
+	    所有剩余单词都被分配给最后一个变量
+	    read -p "Enter a filename:" FILE
+
+条件选择if语句
+	if是shell的关键字，不可以当成命令单独使用。
+	选择执行：
+	注意：if语句可嵌套
+	单分支
+	    if判断条件;then
+	        条件为真的分支代码
+	    fi
+	双分支
+	    if判断条件;then
+	        条件为真的分支代码
+	    else
+	        条件为假的分支代码
+	    fi
+
+	例题：判断用户输入的是yes还是no
+	#!/bin/bash
+	read -p "Do you agree? (yes or no):" ANSWER
+	[[ "$ANSWER" =~ ^[Yy]([Ee][Ss])?$ ]] && { echo ok; exit; }
+	[[ "$ANSWER" =~ ^[Nn][Oo]?$ ]] && { echo Not ok; exit; }
+	echo "Your input is false."
+
+	value=`echo $value | tr 'A-Z' 'a-z'`
+	[[ "$ANSWER" =~ ^(y|yes)$ ]] && { echo ok; exit; }
+	[[ "$ANSWER" =~ ^(n|no)$ ]] && { echo Not ok; exit; }
+
+	
