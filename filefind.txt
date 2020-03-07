@@ -9,8 +9,8 @@ locate
 	locate KEYWORD
 		有用的选项
 		-i 不区分大小写的搜索
-		-n N 只列举前N个匹配项目
-		-r 使用基本正则表达式
+		-n N 只列举前N个匹配项目
+		-r 使用基本正则表达式
 	示例
 	(1)搜索名称或路径中带有“conf”的文件
 		locate conf
@@ -79,12 +79,12 @@ find
 		find -user joe -not -group joe
 		find -user joe -o -user jane
 		find -not \( -user joe -o -user jane \)
-		find / -user joe -o -uid 500
+		find / -user joe -o -uid 500
 		找出/tmp目录下，属主不是root，且文件名不以f开头的文件
 			find /tmp \( -not -user root -a -not -name 'f*' \) -ls
 			find /tmp -not \( -user root -o -name 'f*' \) –ls
-		排除目录
-		示例：
+		排除目录
+		示例：
 		查找/etc/下，除/etc/sane.d目录的其它所有.conf后缀的文件
 			find /etc -path ‘/etc/sane.d’ -a -prune -o -name “*.conf” # -path是搜索条件，-a是并且，-prune是剪切，合起来就是将指定条件进行剪切
 		查找/etc/下，除/etc/sane.d和/etc/fonts两个目录的所有.conf后缀的文件
