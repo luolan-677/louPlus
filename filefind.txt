@@ -1,0 +1,157 @@
+point:
+	locate find xargs compress/uncompress gzip/gunzip bzip2/bunzip2 xz/unxz tar cpio
+locate
+	locate [filename]
+	根据系统中存在的文件数据库(/var/lib/mlocate/mlocate.db)进行检索，检索速度非常快，但是该数据库在刚安装好的系统中是没有的，需要经过一段时间自动生成。
+	可以进行手动生成：updatedb
+	注：这里要注意，在生成这个日志文件的时候十分消耗磁盘的IO性能，如果系统中的文件比较大的话，会占用较长的时间。
+	locate依赖该数据库，该数据库并不是时刻进行更新，所以实时性并不好，用来找一些相对稳定的文件。
+	locate KEYWORD
+		有用的选项
+		-i 不区分大小写的搜索
+		-n N 只列举前N个匹配项目
+		-r 使用基本正则表达式
+	示例
+	(1)搜索名称或路径中带有“conf”的文件
+		locate conf
+	(2)使用Regex来搜索以“.conf”结尾的文件
+		locate -r ‘\.conf$’
+		locate -r '\.\(jpg\|png\)$'
+find
+	实时查找工具，通过遍历指定路径完成文件查找
+	工作特点：
+		查找速度略慢
+		精确查找
+		实时查找
+		可能只搜索用户具备读取和执行权限的目录
+	语法：
+		find [OPTION]... [查找路径] [查找条件] [处理动作]
+		查找路径：指定具体目标路径；默认为当前目录
+		查找条件：指定的查找标准，可以文件名、大小、类型、权限等标准进行；
+		默认为找出指定路径下的所有文件
+		处理动作：对符合条件的文件做操作，默认输出至屏幕
+	查找条件：
+		指搜索层级
+			-maxdepth level 最大搜索目录深度,指定目录下的文件为第1级 # find -maxdepth 1 -mindepth 1 (只搜索第一层)
+			-mindepth level 最小搜索目录深度 # 先显示文件夹，再显示文件夹中的文件
+			-depth 先处理目录内的文件，再处理指定目录 find -depth /etc/ # 先显示文件夹中的文件，再显示文件夹，与上面正好相反
+			-name 根据文件名和inode查找 "文件名称"：支持使用glob *, ?, [], [^](通配符)
+			-iname "文件名称"：不区分字母大小写
+			-inum n 按inode号查找
+			-samefile name 相同inode号的文件
+			-links n 链接数为n的文件
+			-regex “PATTERN”：以PATTERN匹配整个文件路径，而非文件名称 # find /etc/ -regex ".*\.jpg" 注：这里的路径需要写完整，不然搜索不出结果
+		根据属主、属组查找：
+			-user USERNAME：查找属主为指定用户(UID)的文件 # find / -user wang -ls
+			-group GRPNAME: 查找属组为指定组(GID)的文件
+			-uid UserID：查找属主为指定的UID号的文件
+			-gid GroupID：查找属组为指定的GID号的文件
+			-nouser：查找没有属主的文件 # 某个账号若被删除，该账号建立的文件就会没有属主
+			-nogroup：查找没有属组的文件 # 同上
+		根据文件类型查找
+			-type TYPE
+			-type f: 普通文件
+			-type d: 目录文件
+			-type l: 符号链接文件
+			-type s：套接字文件
+			-type b: 块设备文件
+			-type c: 字符设备文件
+			-type p: 管道文件
+		空文件或目录
+			-empty
+			示例：find /app -type d -empty
+		组合条件：
+			与：-a # find /data -name "f*" -type f / find /data -name "f*" -a -type f
+			或：-o # find /data \(-name "f*" -0 -type f \) -ls 与的优先级高于或，所以在该条件中需要进行使用小括号规定命令的优先级，但是小括号需要进行转义，当然也可以把ls写两遍
+			非：-not ! # find /app -type d ! -empty
+		德·摩根定律：
+			(非 A) 或 (非 B) = 非(A 且 B)
+			(非 A) 且 (非 B) = 非(A 或 B)
+		示例：
+			!A -a !B = !(A -o B)
+			!A -o !B = !(A -a B)
+	find 示例：
+		find -name snow.png
+		find -iname snow.png
+		find / -name “*.txt” # 文件名需要使用引号进行标注，否则通配符会优先选择匹配当前目录下的文件，搜索出的结果会偏少
+		find /var –name “*log*” 
+		find -user joe -group joe
+		find -user joe -not -group joe
+		find -user joe -o -user jane
+		find -not \( -user joe -o -user jane \)
+		find / -user joe -o -uid 500
+		找出/tmp目录下，属主不是root，且文件名不以f开头的文件
+			find /tmp \( -not -user root -a -not -name 'f*' \) -ls
+			find /tmp -not \( -user root -o -name 'f*' \) –ls
+		排除目录
+		示例：
+		查找/etc/下，除/etc/sane.d目录的其它所有.conf后缀的文件
+			find /etc -path ‘/etc/sane.d’ -a -prune -o -name “*.conf” # -path是搜索条件，-a是并且，-prune是剪切，合起来就是将指定条件进行剪切
+		查找/etc/下，除/etc/sane.d和/etc/fonts两个目录的所有.conf后缀的文件
+			find /etc \( -path "/etc/sane.d" -o -path "/etc/fonts" \) -a -prune -o - name "*.conf"
+		根据文件大小来查找：
+			-size [+|-]#UNIT
+				常用单位：k, M, G，c（byte）
+			#UNIT: (#-1, #] # 如果是 find -size 1M，就会变成(0,1M]
+				如：6k 表示(5k,6k]
+			-#UNIT：[0,#-1]
+				如：-6k 表示[0,5k]
+			+#UNIT：(#,∞)
+				如：+6k 表示(6k,∞)
+		根据时间戳：
+			以“天”为单位
+				-atime [+|-]#,
+					#: [#,#+1)
+					+#: [#+1, ∞ ]
+					-#: [0,#)
+				-mtime
+				-ctime
+			以“分钟”为单位
+				-amin
+				-mmin
+				-cmin
+		根据权限查找：
+		-perm [/|-]MODE
+			MODE: 精确权限匹配
+			/MODE：任何一类(u,g,o)对象的权限中只要能一位匹配即可，或关系，+从centos7开始淘汰 rwx-rwx-rwx只要有一个满足就行，622对应rw-r-r，r-r-r也能满足
+			-MODE：每一类对象都必须同时拥有指定权限，与关系
+			0 表示不关注
+		find -perm 755 会匹配权限模式恰好是755的文件
+		只要当任意人有写权限时，find -perm +222就会匹配
+		只有当每个人都有写权限时，find -perm -222才会匹配
+		只有当其它人（other）有写权限时，find -perm -002才会匹配 / find -perm /022也行，因为只有一个条件
+	处理动作：
+		-print：默认的处理动作，显示至屏幕
+		-ls：类似于对查找到的文件执行“ls -l”命令
+		-delete：删除查找到的文件
+		-fls file：查找到的所有文件的长格式信息保存至指定文件中 # 相当于将查找完整显示的内容重定向到某个文件中
+		-ok COMMAND {} \; 对查找到的每个文件执行由COMMAND指定的命令，对于每个文件执行命令之前，都会交互式要求用户确认 # find -perm /002 -ok chmod 0-w \; 每个文件的操作都会被询问
+		-exec COMMAND {} \; 对查找到的每个文件执行由COMMAND指定的命令 # find -perm /002 -exec chmod 0-w \; 操作将不会进行询问
+		{}: 用于引用查找到的文件名称自身 # 花括号表示的是完整路径 find /etc/log -size +10k -exec cp {} /home/data/{}.bak \; 此时需要操作的文件夹变成了/home/data/etc/log/...，所以系统就会提示没有这个文件夹
+			这里的cp可能会存在一个问题，/etc/log/下搜索到的所以符合条件的文件，都会直接放到新的log目录下，不管还有没有子路径，可能会导致不在一个目录中的两个同名文件进行覆盖
+		find传递查找到的文件至后面指定的命令时，查找到所有符合条件的文件一次性传递给后面的命令
+	参数替换xargs
+		由于很多命令不支持管道|来传递参数，xargs用于产生某个命令的参数，xargs可以读入 stdin 的数据，并且以空格符或回车符将 stdin 的数据分隔成为参数
+		许多命令不能接受过多参数，命令执行可能会失败，xargs可以解决，xargs可以将前面的输出变成一个一个单独的参数进行依次向后输入
+		注意：文件名或者是其他意义的名词内含有空格符的情况
+		seq 10 | xargs -n2 echo 指定参数换行的条件，这里的意思是，两个参数存在一行时就进行换行
+		find和xargs的组合：find | xargs COMMAND
+		示例：
+			ls | xargs rm 删除当前目录下的大量文件
+			find /sbin/ -perm /700 | ls -l 这个命令是错误的，ls命令不需要标准输入，所以管道符并不能生效
+			find /bin/ -perm /7000 | xargs ls -Sl 查找有特殊权限的文件
+			find /bin/ -perm -7000 | xargs ls -Sl 此命令和上面有何区别？
+			find -type f -name “*.txt” -print0 | xargs -0 rm 以字符nul分隔 # 要求文件名与文件名之间用0(nul)进行分隔，避免文件名中存在奇怪的字符导致命令执行失败，可以经常使用 -print0 | xargs -0
+	find示例
+		备份配置文件，添加.orig这个扩展名
+			find -name “*.conf” -exec cp {} {}.orig \;
+		提示删除存在时间超过３天以上的joe的临时文件
+			find /tmp -ctime +3 -user joe -ok rm {} \;
+		在主目录中寻找可被其它用户写入的文件
+			find ~ -perm -002 -exec chmod o-w {} \;
+		查找/data下的权限为644，后缀为sh的普通文件，增加执行权限
+			find /data –type f -perm 644 -name “*.sh” –exec chmod 755 {} \;
+		查看/home的目录
+			find /home –type d -ls
+
+
