@@ -10,3 +10,4 @@ while count < N:
 average = sum / N
 print("N = {}, sum = {}".format(N,sum))
 print("average = {:.2f}".format(average))
+xxx
